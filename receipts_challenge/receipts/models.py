@@ -10,7 +10,7 @@ class Receipt(models.Model):
     retailer = models.CharField(max_length=100)
     purchaseDate = models.DateField()
     purchaseTime = models.TimeField()
-    items = models.ManyToManyField(Item)
+    items = [item for item in Item.objects.all()]
     total = models.CharField(max_length=10)
 
 
