@@ -1,30 +1,27 @@
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
+from django.http import Http404
 from receipts.models import Receipt
 from receipts.serializers import ReceiptSerializer
-from rest_framework.parsers import JSONParser
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
-# Create your views here.
-@csrf_exempt
-def receipts(request):
-    if request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = ReceiptSerializer(data=data)
+class ReceiptProcess(APIView):
+    def post(self, request, format=None):
+        serializer = ReceiptSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=200)
-        return JsonResponse(serializer.errors, status=400)
-    
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
-@csrf_exempt
-def receipt_points(request, pk):
-    try:
-        receipt = Receipt.objects.get(pk=pk)
-    except Receipt.DoesNotExist:
-        return HttpResponse(status=404)
+class ReceiptPoints(APIView):
+    def get_object(self, pk):
+        try:
+            return Receipt.objects.get(pk=pk)
+        except Receipt.DoesNotExist:
+            raise Http404
     
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
+        receipt = self.get_object(pk)
         serializer = ReceiptSerializer(receipt)
-        return JsonResponse(serializer.data) #change later
+        return Response(serializer.data) #change later
